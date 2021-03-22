@@ -105,12 +105,47 @@ namespace CustomControl
             protected set { base.FormBorderStyle = value; }
         }
 
+        /// <summary>
+        /// BackColor
+        /// </summary>
+        [Browsable(false)]                              // プロパティウィンドウ非表示
+        [EditorBrowsable(EditorBrowsableState.Never)]   // インテリセンス非表示
+        public new Color BackColor
+        {
+            get { return base.BackColor; }
+            protected set { base.BackColor = value; }
+        }
+
+        /// <summary>
+        /// ForeColor
+        /// </summary>
+        [Browsable(false)]                              // プロパティウィンドウ非表示
+        [EditorBrowsable(EditorBrowsableState.Never)]   // インテリセンス非表示
+        public new Color ForeColor
+        {
+            get { return base.ForeColor; }
+            protected set { base.ForeColor = value; }
+        }
+
+        /// <summary>
+        /// HelpButton
+        /// </summary>
+        [Browsable(false)]                              // プロパティウィンドウ非表示
+        [EditorBrowsable(EditorBrowsableState.Never)]   // インテリセンス非表示
+        public new bool HelpButton
+        {
+            get { return base.HelpButton; }
+            protected set { base.HelpButton = value; }
+        }
+
+
         [Category("Layout")]
         public bool Sizable { get; set; }
 
         /// <summary>
         /// User Area Defnition
         /// </summary>
+        [Browsable(false)]
         public Rectangle UserArea
         {
             get
@@ -122,6 +157,7 @@ namespace CustomControl
         /// <summary>
         /// TitleBarBounds
         /// </summary>
+        [Browsable(false)]
         public Rectangle TitleBarBounds
         {
             get
@@ -206,6 +242,7 @@ namespace CustomControl
         } = Color.Snow;
 
 
+        [Browsable(false)]
         public bool IsFormActivated
         {
             get
@@ -214,6 +251,7 @@ namespace CustomControl
             }
         }
 
+        [Browsable(false)]
         public Rectangle LeftButtonBounds
         {
             get
@@ -222,6 +260,7 @@ namespace CustomControl
             }
         }
 
+        [Browsable(false)]
         public Rectangle CenterButtonBounds
         {
             get
@@ -230,6 +269,7 @@ namespace CustomControl
             }
         }
 
+        [Browsable(false)]
         public Rectangle XButtonBounds
         {
             get
@@ -272,7 +312,6 @@ namespace CustomControl
         private static readonly Brush BACKGROUND_HOVER_BRUSH = new SolidBrush(BACKGROUND_HOVER_COLOR);
         private static readonly Color BACKGROUND_FOCUS_COLOR = Color.FromArgb(30, 0, 0, 0);
         private static readonly Brush BACKGROUND_FOCUS_BRUSH = new SolidBrush(BACKGROUND_FOCUS_COLOR);
-        private static readonly Color TEXT_COLOR = Color.White;
         private static readonly Color TEXT_DISABLED_COLOR = Color.FromArgb(97, 255, 255, 255); // Alpha 38%
 
         private int FORM_PADDING = 14;
@@ -281,7 +320,7 @@ namespace CustomControl
         private int borderWidtDPI;
 
         private Brush titleBarBrush;
-
+        private Color textColor;
 
         private readonly Cursor[] resizeCursors = { Cursors.SizeNESW, Cursors.SizeWE, Cursors.SizeNWSE, Cursors.SizeWE, Cursors.SizeNS };
 
@@ -302,7 +341,6 @@ namespace CustomControl
         private bool aeroEnabled;
 
         private bool isFormActivated = false;
-
         #endregion
 
         #region Event
@@ -539,6 +577,9 @@ namespace CustomControl
 
             // タイトルバーを塗りつぶすBrushのインスタンスを生成する。
             titleBarBrush = new SolidBrush(TitleBarColor);
+
+            // タイトルバーの文字色を決定する。
+            textColor = OptimizedTextColor(TitleBarColor);
 
             if (ControlBox)
             {
@@ -802,7 +843,7 @@ namespace CustomControl
                 g.FillRectangle(downBrush, xButtonBounds);
 
             float offset_x = (leftButtonBounds.Width - leftButtonBounds.Height) / 2f;
-            using (var formButtonsPen = new Pen(this.isFormActivated ? TEXT_COLOR : TEXT_DISABLED_COLOR, 1f * DPI_SCALE))
+            using (var formButtonsPen = new Pen(this.isFormActivated ? this.textColor : TEXT_DISABLED_COLOR, 1f * DPI_SCALE))
             {
                 // Minimize button.
                 if (showMin)
@@ -875,9 +916,8 @@ namespace CustomControl
 
             //Form text
             g.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
-            Color textColor = this.isFormActivated ? TEXT_COLOR : TEXT_DISABLED_COLOR;
             using (StringFormat sf = new StringFormat(StringFormat.GenericTypographic))
-            using (Brush textBrush = new SolidBrush(textColor))
+            using (Brush textBrush = new SolidBrush(this.isFormActivated ? this.textColor : TEXT_DISABLED_COLOR))
             {
                 sf.Trimming = StringTrimming.EllipsisWord;
                 sf.Alignment = StringAlignment.Near;
@@ -1125,9 +1165,7 @@ namespace CustomControl
             centerButtonBounds = new Rectangle(Width - 2 * TitleBarButtonWidth, 0, TitleBarButtonWidth, titleBarHeightDPI);
             xButtonBounds = new Rectangle(Width - TitleBarButtonWidth, 0, TitleBarButtonWidth, titleBarHeightDPI);
             titleBarBounds = new Rectangle(0, 0, Width, titleBarHeightDPI);
-
         }
-        #endregion
 
         private void InitializeComponent()
         {
@@ -1135,12 +1173,71 @@ namespace CustomControl
             // 
             // CustomForm
             // 
-            this.ClientSize = new System.Drawing.Size(284, 261);
+            this.ClientSize = new Size(284, 261);
             this.Name = "CustomForm";
             this.ResumeLayout(false);
 
         }
+        #endregion
 
+        #region Text Color Optimization
+        // 背景色から黒文字か白文字の見やすい方を自動判定 （WCAG 2.0 利用版）
+        // https://qiita.com/mainy/items/f5540f33d37d8ce6a46e
+
+        /// <summary>
+        /// RGB から相対輝度を算出（0.0 ～ 1.0）
+        /// </summary>
+        /// <param name="R">Red</param>
+        /// <param name="G">Green</param>
+        /// <param name="B">Blue</param>
+        /// <returns>ni</returns>
+        private double RelativeLuminance(byte R, byte G, byte B)
+        {
+            // RGB の各値を相対輝度算出用に変換
+            Func<byte, double> toRgb = (rgb) => {
+                double srgb = (double)rgb / 255;
+                return srgb <= 0.03928 ? srgb / 12.92 : Math.Pow((srgb + 0.055) / 1.055, 2.4);
+            };
+
+            return 0.2126 * toRgb(R) + 0.7152 * toRgb(G) + 0.0722 * toRgb(B);
+        }
+
+        /// <summary>
+        /// 2つの相対輝度値から、相対輝度比率を算出（0.0 ～ 21.0）
+        /// </summary>
+        /// <param name="relativeLuminance1">比較する輝度1</param>
+        /// <param name="relativeLuminance2">比較する輝度2</param>
+        /// <returns></returns>
+        private double RelativeLuminanceRatio(double relativeLuminance1, double relativeLuminance2)
+        {
+            // 相対輝度比率 = (大きい値 + 0.05) / (小さい値 + 0.05)
+            return (Math.Max(relativeLuminance1, relativeLuminance2) + 0.05) / (Math.Min(relativeLuminance1, relativeLuminance2) + 0.05);
+        }
+
+        /// <summary>
+        /// 背景色から白文字か黒文字を判定
+        /// </summary>
+        /// <param name="backgroundColor">背景色</param>
+        /// <returns>最適化された文字色</returns>
+        //private Color OptimizedTextColor(byte R, byte G, byte B)
+        private Color OptimizedTextColor(Color backgroundColor)
+        {
+            // 背景色の相対輝度
+            double background = RelativeLuminance(backgroundColor.R, backgroundColor.G, backgroundColor.B);
+
+            const double white = 1.0D;  // 白の相対輝度
+            const double black = 0.0D;  // 黒の相対輝度
+
+            // 文字色と背景色のコントラスト比を計算
+            double whiteContrast = RelativeLuminanceRatio(white, background);   // 文字色：白との比
+            double blackContrast = RelativeLuminanceRatio(black, background);   // 文字色：黒との比
+
+            // コントラスト比が大きい文字色を採用
+            return whiteContrast < blackContrast ? Color.Black : Color.White;
+        }
+        #endregion
+
+        #region Animation Related Methods
         /// <summary>
         /// 1 フレームの時間とフレーム数を指定してアニメーション機能を提供します。
         /// </summary>
@@ -1184,6 +1281,7 @@ namespace CustomControl
             if (duration < interval) duration = interval;
             Animate(25, duration / interval, callback);
         }
+        #endregion
     }
 
     public class MouseMessageFilter : IMessageFilter
