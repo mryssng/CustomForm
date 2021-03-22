@@ -140,10 +140,6 @@ namespace CustomControl
         public int TitleBarHeight
         {
             get; set;
-            //get
-            //{
-            //    return TITLE_BAR_HEIGHT;
-            //}
         } = 28;
 
         /// <summary>
@@ -161,7 +157,7 @@ namespace CustomControl
         /// <summary>
         /// TitleBarButtonWidth
         /// </summary>
-        [Description("タイトルバーのボタンの幅")]
+        [Description("タイトルバーのボタンの幅を設定します。")]
         [Category("CustomForm")]
         [Browsable(false)]
         public int TitleBarButtonWidth
@@ -169,6 +165,46 @@ namespace CustomControl
             get;
             private set;
         }
+
+        /// <summary>
+        /// TitleBarColor
+        /// </summary>
+        [Description("タイトルバーの色を設定します。")]
+        [Category("CustomForm")]
+        [DefaultValue(typeof(Color), "OrangeRed")]
+        [Browsable(true)]
+        public Color TitleBarColor
+        {
+            get;
+            set;
+        } = Color.OrangeRed;
+
+        /// <summary>
+        /// BorderColor
+        /// </summary>
+        [Description("Formの枠の色を設定します。")]
+        [Category("CustomForm")]
+        [DefaultValue(typeof(Color), "OrangeRed")]
+        [Browsable(true)]
+        public Color BorderColor
+        {
+            get;
+            set;
+        } = Color.OrangeRed;
+
+        /// <summary>
+        /// BackDropColor
+        /// </summary>
+        [Description("Formの背景の色を設定します。")]
+        [Category("CustomForm")]
+        [DefaultValue(typeof(Color), "Snow")]
+        [Browsable(true)]
+        public Color BackDropColor
+        {
+            get;
+            set;
+        } = Color.Snow;
+
 
         public bool IsFormActivated
         {
@@ -230,10 +266,8 @@ namespace CustomControl
         private const int FADEIN_ANIMATION_TIME = 250; //250;
         private const int FADEOUT_ANIMATION_TIME = 200; //125;
 
-        private static readonly Color BACKDROP_COLOR = Color.Snow;
-        private static readonly Color TITLEBAR_COLOR = Color.OrangeRed;
-        private static readonly Brush TITLEBAR_BRUSH = new SolidBrush(TITLEBAR_COLOR);
-        private static readonly Color BORDER_COLOR = Color.Firebrick;
+        //private static readonly Color BACKDROP_COLOR = Color.Snow;
+        //private static readonly Color BORDER_COLOR = Color.Firebrick;
         private static readonly Color BACKGROUND_HOVER_COLOR = Color.FromArgb(20, 0, 0, 0);
         private static readonly Brush BACKGROUND_HOVER_BRUSH = new SolidBrush(BACKGROUND_HOVER_COLOR);
         private static readonly Color BACKGROUND_FOCUS_COLOR = Color.FromArgb(30, 0, 0, 0);
@@ -245,6 +279,9 @@ namespace CustomControl
 
         private int titleBarHeightDPI;
         private int borderWidtDPI;
+
+        private Brush titleBarBrush;
+
 
         private readonly Cursor[] resizeCursors = { Cursors.SizeNESW, Cursors.SizeWE, Cursors.SizeNWSE, Cursors.SizeWE, Cursors.SizeNS };
 
@@ -500,6 +537,9 @@ namespace CustomControl
             TitleBarButtonWidth = (int)(titleBarHeightDPI * 1.5f);
             CalcButtonBounds();
 
+            // タイトルバーを塗りつぶすBrushのインスタンスを生成する。
+            titleBarBrush = new SolidBrush(TitleBarColor);
+
             if (ControlBox)
             {
                 if (MinimizeBox && MaximizeBox)
@@ -613,7 +653,7 @@ namespace CustomControl
             if (isClickingTitleBar)
             {
                 int x, y;
-                Point pt = System.Windows.Forms.Cursor.Position;
+                Point pt = Cursor.Position;
                 if (this.WindowState == FormWindowState.Maximized)
                 {
                     FormNormal();
@@ -722,13 +762,13 @@ namespace CustomControl
             g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
 
             // Draw background
-            g.Clear(BACKDROP_COLOR);
+            g.Clear(BackDropColor);
 
             // Draw title bar
-            g.FillRectangle(TITLEBAR_BRUSH, titleBarBounds);
+            g.FillRectangle(titleBarBrush, titleBarBounds);
 
             // Draw border
-            using (var borderPen = new Pen(BORDER_COLOR, borderWidtDPI))
+            using (var borderPen = new Pen(BorderColor, borderWidtDPI))
             {
                 g.DrawLine(borderPen, new PointF(0, 0), new PointF(0, this.ClientRectangle.Height));
                 g.DrawLine(borderPen, new PointF(1, this.ClientRectangle.Height - 1), new PointF(this.ClientRectangle.Width - 1, this.ClientRectangle.Height - 1));
@@ -791,7 +831,7 @@ namespace CustomControl
                             (int)(centerButtonBounds.Height * 0.35),
                             (int)(centerButtonBounds.Height * 0.35));
                         g.FillRectangle(
-                            TITLEBAR_BRUSH,
+                            titleBarBrush,
                             centerButtonBounds.X + offset_x - offset + (int)(centerButtonBounds.Height * 0.33),
                             centerButtonBounds.Y + offset + (int)(centerButtonBounds.Height * 0.33),
                             (int)(centerButtonBounds.Height * 0.35),

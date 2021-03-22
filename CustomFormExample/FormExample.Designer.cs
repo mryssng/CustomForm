@@ -36,6 +36,7 @@ namespace CustomWindow
             this.AutoScaleDimensions = new System.Drawing.SizeF(13F, 32F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.MinimumSize = new System.Drawing.Size(252, 56);
             this.Name = "FormExample";
             this.Text = "Form1";
             this.ResumeLayout(false);
