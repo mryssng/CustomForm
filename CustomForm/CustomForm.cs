@@ -207,13 +207,13 @@ namespace CustomControl
         /// </summary>
         [Description("タイトルバーの色を設定します。")]
         [Category("CustomForm")]
-        [DefaultValue(typeof(Color), "OrangeRed")]
+        [DefaultValue(typeof(Color), "DarkSlateGray")]
         [Browsable(true)]
         public Color TitleBarColor
         {
             get;
             set;
-        } = Color.OrangeRed;
+        } = Color.DarkSlateGray;
 
         /// <summary>
         /// BorderColor
@@ -871,12 +871,42 @@ namespace CustomControl
                             centerButtonBounds.Y - offset + (int)(centerButtonBounds.Height * 0.33),
                             (int)(centerButtonBounds.Height * 0.35),
                             (int)(centerButtonBounds.Height * 0.35));
+
+
+
+                        //if (buttonState == ButtonState.MaxOver && showMax)
+                        //    g.FillRectangle(hoverBrush, centerButtonBounds);
+
+                        //if (buttonState == ButtonState.MaxDown && showMax)
+                        //    g.FillRectangle(downBrush, centerButtonBounds);
+
+
                         g.FillRectangle(
                             titleBarBrush,
                             centerButtonBounds.X + offset_x - offset + (int)(centerButtonBounds.Height * 0.33),
                             centerButtonBounds.Y + offset + (int)(centerButtonBounds.Height * 0.33),
                             (int)(centerButtonBounds.Height * 0.35),
                             (int)(centerButtonBounds.Height * 0.35));
+
+                        if (buttonState == ButtonState.MaxOver && showMax)
+                        {
+                            g.FillRectangle(
+                                hoverBrush,
+                                centerButtonBounds.X + offset_x - offset + (int)(centerButtonBounds.Height * 0.33),
+                                centerButtonBounds.Y + offset + (int)(centerButtonBounds.Height * 0.33),
+                                (int)(centerButtonBounds.Height * 0.35),
+                                (int)(centerButtonBounds.Height * 0.35));
+                        }
+                        if (buttonState == ButtonState.MaxDown && showMax)
+                        {
+                            g.FillRectangle(
+                                downBrush,
+                                centerButtonBounds.X + offset_x - offset + (int)(centerButtonBounds.Height * 0.33),
+                                centerButtonBounds.Y + offset + (int)(centerButtonBounds.Height * 0.33),
+                                (int)(centerButtonBounds.Height * 0.35),
+                                (int)(centerButtonBounds.Height * 0.35));
+                        }
+
                         g.DrawRectangle(
                             formButtonsPen,
                             centerButtonBounds.X + offset_x - offset + (int)(centerButtonBounds.Height * 0.33),

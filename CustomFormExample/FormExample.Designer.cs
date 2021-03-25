@@ -39,6 +39,7 @@ namespace CustomWindow
             this.MinimumSize = new System.Drawing.Size(252, 56);
             this.Name = "FormExample";
             this.Text = "Form1";
+            this.TitleBarColor = System.Drawing.Color.OrangeRed;
             this.ResumeLayout(false);
 
         }
