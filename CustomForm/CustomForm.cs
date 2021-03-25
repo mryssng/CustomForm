@@ -89,13 +89,7 @@ namespace CustomControl
 
         #region Propereties
         /// <summary>
-        /// MouseState
-        /// </summary>
-        [Browsable(false)]
-        private MouseStateType MouseState { get; set; }
-
-        /// <summary>
-        /// FormBorderStyle
+        /// FormBorderStyleをプロパティウィンドウで非表示に設定する
         /// </summary>
         [Browsable(false)]                              // プロパティウィンドウ非表示
         [EditorBrowsable(EditorBrowsableState.Never)]   // インテリセンス非表示
@@ -106,7 +100,7 @@ namespace CustomControl
         }
 
         /// <summary>
-        /// BackColor
+        /// BackColorをプロパティウィンドウで非表示に設定する
         /// </summary>
         [Browsable(false)]                              // プロパティウィンドウ非表示
         [EditorBrowsable(EditorBrowsableState.Never)]   // インテリセンス非表示
@@ -117,7 +111,7 @@ namespace CustomControl
         }
 
         /// <summary>
-        /// ForeColor
+        /// ForeColorをプロパティウィンドウで非表示に設定する
         /// </summary>
         [Browsable(false)]                              // プロパティウィンドウ非表示
         [EditorBrowsable(EditorBrowsableState.Never)]   // インテリセンス非表示
@@ -128,7 +122,7 @@ namespace CustomControl
         }
 
         /// <summary>
-        /// HelpButton
+        /// HelpButtonをプロパティウィンドウで非表示に設定する
         /// </summary>
         [Browsable(false)]                              // プロパティウィンドウ非表示
         [EditorBrowsable(EditorBrowsableState.Never)]   // インテリセンス非表示
@@ -138,12 +132,14 @@ namespace CustomControl
             protected set { base.HelpButton = value; }
         }
 
-
+        /// <summary>
+        /// Sizable
+        /// </summary>
         [Category("Layout")]
         public bool Sizable { get; set; }
 
         /// <summary>
-        /// User Area Defnition
+        /// ユーザーエリア
         /// </summary>
         [Browsable(false)]
         public Rectangle UserArea
@@ -155,7 +151,7 @@ namespace CustomControl
         }
 
         /// <summary>
-        /// TitleBarBounds
+        /// タイトルバーの境界矩形
         /// </summary>
         [Browsable(false)]
         public Rectangle TitleBarBounds
@@ -167,7 +163,7 @@ namespace CustomControl
         }
 
         /// <summary>
-        /// TitleBarHeight
+        /// タイトルバーの高さ
         /// </summary>
         [Description("タイトルバーの高さを設定します。")]
         [Category("CustomForm")]
@@ -179,7 +175,7 @@ namespace CustomControl
         } = 28;
 
         /// <summary>
-        /// BorderWidth
+        /// Formの境界線の幅
         /// </summary>
         [Description("Formの境界線の幅を設定します。")]
         [Category("CustomForm")]
@@ -191,7 +187,7 @@ namespace CustomControl
         } = 2;
 
         /// <summary>
-        /// TitleBarButtonWidth
+        /// タイトルバーのボタンの幅
         /// </summary>
         [Description("タイトルバーのボタンの幅を設定します。")]
         [Category("CustomForm")]
@@ -203,7 +199,7 @@ namespace CustomControl
         }
 
         /// <summary>
-        /// TitleBarColor
+        /// タイトルバーの色
         /// </summary>
         [Description("タイトルバーの色を設定します。")]
         [Category("CustomForm")]
@@ -216,20 +212,20 @@ namespace CustomControl
         } = Color.DarkSlateGray;
 
         /// <summary>
-        /// BorderColor
+        /// Formの枠の色
         /// </summary>
         [Description("Formの枠の色を設定します。")]
         [Category("CustomForm")]
-        [DefaultValue(typeof(Color), "OrangeRed")]
+        [DefaultValue(typeof(Color), "DarkSlateGray")]
         [Browsable(true)]
         public Color BorderColor
         {
             get;
             set;
-        } = Color.OrangeRed;
+        } = Color.DarkSlateGray;
 
         /// <summary>
-        /// BackDropColor
+        /// Formの背景の色
         /// </summary>
         [Description("Formの背景の色を設定します。")]
         [Category("CustomForm")]
@@ -241,7 +237,9 @@ namespace CustomControl
             set;
         } = Color.Snow;
 
-
+        /// <summary>
+        /// Formがアクティブかどうか
+        /// </summary>
         [Browsable(false)]
         public bool IsFormActivated
         {
@@ -251,6 +249,9 @@ namespace CustomControl
             }
         }
 
+        /// <summary>
+        /// フォームのコントロールボックスの左側ボタンの境界線
+        /// </summary>
         [Browsable(false)]
         public Rectangle LeftButtonBounds
         {
@@ -260,6 +261,9 @@ namespace CustomControl
             }
         }
 
+        /// <summary>
+        /// フォームのコントロールボックスの真ん中ボタンの境界線
+        /// </summary>
         [Browsable(false)]
         public Rectangle CenterButtonBounds
         {
@@ -269,6 +273,9 @@ namespace CustomControl
             }
         }
 
+        /// <summary>
+        /// フォームのコントロールボックスのクローズボタンの境界線
+        /// </summary>
         [Browsable(false)]
         public Rectangle XButtonBounds
         {
@@ -280,15 +287,19 @@ namespace CustomControl
         #endregion
 
         #region Fields
-        // DPI scaling
-        public static readonly float DPI = NativeMethods.GetDeviceCaps(NativeMethods.GetWindowDC(IntPtr.Zero), LOGPIXELSX);
-        public static readonly float DPI_SCALE = DPI / 96f;
         private const int LOGPIXELSX = 88;
         private const int LOGPIXELSY = 90;
+        // DPI値を取得
+        public static readonly float DPI = NativeMethods.GetDeviceCaps(NativeMethods.GetWindowDC(IntPtr.Zero), LOGPIXELSX);
+        // 高DPI時のスケーリング比
+        public static readonly float DPI_SCALE = DPI / 96f;
 
+        // リサイズの方向
         private ResizeDirection resizeDir;
+        // ボタンの状態
         private ButtonState buttonState = ButtonState.None;
 
+        // リサイズの方向とコマンドをコマンドDictionaryに格納
         private readonly Dictionary<int, int> ResizingLocationsToCmd = new Dictionary<int, int>
         {
             {(int)HitTestValues.HT_TOP,         (int)ResizingEdge.WMSZ_TOP},
@@ -301,32 +312,51 @@ namespace CustomControl
             {(int)HitTestValues.HT_BOTTOMRIGHT, (int)ResizingEdge.WMSZ_BOTTOMRIGHT}
         };
 
+        // リサイズが可能なForm境界線からの距離
         private readonly int RESIZE_BORDER_WIDTH = 5;
 
-        private const int FADEIN_ANIMATION_TIME = 250; //250;
-        private const int FADEOUT_ANIMATION_TIME = 200; //125;
+        // Form表示時のフェードイン・エフェクトの時間(msec)
+        private const int FADEIN_ANIMATION_TIME = 250;
+        // Formクローズ時のフェードアウト・エフェクトの時間(msec)
+        private const int FADEOUT_ANIMATION_TIME = 200;
 
-        //private static readonly Color BACKDROP_COLOR = Color.Snow;
-        //private static readonly Color BORDER_COLOR = Color.Firebrick;
+        // コントロールボックス上にカーソルがある時の色を設定
         private static readonly Color BACKGROUND_HOVER_COLOR = Color.FromArgb(20, 0, 0, 0);
+        // コントロールボックス上にカーソルがある時のブラシのインスタンスを生成
         private static readonly Brush BACKGROUND_HOVER_BRUSH = new SolidBrush(BACKGROUND_HOVER_COLOR);
+        // コントロールボックスをクリックした時の色を設定
         private static readonly Color BACKGROUND_FOCUS_COLOR = Color.FromArgb(30, 0, 0, 0);
+        // コントロールボックスをクリックした時のブラシのインスタンスを生成
         private static readonly Brush BACKGROUND_FOCUS_BRUSH = new SolidBrush(BACKGROUND_FOCUS_COLOR);
+        // Formがアクティブでない時のタイトルテキストの色
         private static readonly Color TEXT_DISABLED_COLOR = Color.FromArgb(97, 255, 255, 255); // Alpha 38%
 
+        // タイトルテキストのForm左端からの距離
         private int FORM_PADDING = 14;
 
+        // ディスプレイのDPIを考慮したタイトルバーの高さ
         private int titleBarHeightDPI;
-        private int borderWidtDPI;
 
+        // ディスプレイのDPIを考慮したForm境界線の線幅
+        private int borderWidthDPI;
+
+        // タイトルバーを塗りつぶすブラシ
         private Brush titleBarBrush;
+
+        // タイトルテキストの色
         private Color textColor;
 
+        // リサイズ時の各種カーソル
         private readonly Cursor[] resizeCursors = { Cursors.SizeNESW, Cursors.SizeWE, Cursors.SizeNWSE, Cursors.SizeWE, Cursors.SizeNS };
 
+        // コントロールボックスの左側ボタンの境界線
         private Rectangle leftButtonBounds;
+        // コントロールボックスの真ん中ボタンの境界線
         private Rectangle centerButtonBounds;
+        // コントロールボックスのクローズボタンの境界線
         private Rectangle xButtonBounds;
+
+        // タイトルバーの境界線
         private Rectangle titleBarBounds;
 
         // For Drag and move with clicking on Title bar when the form maximized
@@ -570,7 +600,7 @@ namespace CustomControl
         {
             base.OnLoad(e);
 
-            borderWidtDPI = (int)(BorderWidth * DPI_SCALE);
+            borderWidthDPI = (int)(BorderWidth * DPI_SCALE);
             titleBarHeightDPI = (int)(TitleBarHeight * DPI_SCALE);
             TitleBarButtonWidth = (int)(titleBarHeightDPI * 1.5f);
             CalcButtonBounds();
@@ -809,7 +839,7 @@ namespace CustomControl
             g.FillRectangle(titleBarBrush, titleBarBounds);
 
             // Draw border
-            using (var borderPen = new Pen(BorderColor, borderWidtDPI))
+            using (var borderPen = new Pen(BorderColor, borderWidthDPI))
             {
                 g.DrawLine(borderPen, new PointF(0, 0), new PointF(0, this.ClientRectangle.Height));
                 g.DrawLine(borderPen, new PointF(1, this.ClientRectangle.Height - 1), new PointF(this.ClientRectangle.Width - 1, this.ClientRectangle.Height - 1));
