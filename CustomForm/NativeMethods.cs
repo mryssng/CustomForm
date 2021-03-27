@@ -554,5 +554,11 @@ namespace NativeAPI
         public const int ABS_AUTOHIDE = 0x1;
 
         public const int CS_DROPSHADOW = 0x00020000;
+
+        // 論理インチ当たりの画面の水平方向のピクセル数
+        public const int LOGPIXELSX = 88;
+        // 論理インチ当たりの画面の垂直方向のピクセル数
+        public const int LOGPIXELSY = 90;
+
     }
 }

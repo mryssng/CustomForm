@@ -287,10 +287,8 @@ namespace CustomControl
         #endregion
 
         #region Fields
-        private const int LOGPIXELSX = 88;
-        private const int LOGPIXELSY = 90;
-        // DPI値を取得
-        public static readonly float DPI = NativeMethods.GetDeviceCaps(NativeMethods.GetWindowDC(IntPtr.Zero), LOGPIXELSX);
+        // 画面の解像度(DPI値)を取得
+        public static readonly float DPI = NativeMethods.GetDeviceCaps(NativeMethods.GetWindowDC(IntPtr.Zero), NativeConstants.LOGPIXELSX);
         // 高DPI時のスケーリング比
         public static readonly float DPI_SCALE = DPI / 96f;
 
@@ -366,44 +364,49 @@ namespace CustomControl
         // 最大化・最小化する前のNormalState時のウィンドウサイズ
         private Rectangle oldWindowRect;
 
+        // Formのタイトルのフォント
         private readonly Font titleFont;
 
-        private bool aeroEnabled;
+        // Fromの枠に影をつけることができるかかどうか.(OSの種類によりCheckAeroEnabledにて自動判定)
+        private bool aeroEnabled = false;
 
+        // Formがアクティブかどうか
         private bool isFormActivated = false;
         #endregion
 
         #region Event
+        // Formをクローズする前に発生するイベント
         public delegate void BeforeFormClosingEventHandler(object sender, BeforeFormClosingEventArgs e);
         public event BeforeFormClosingEventHandler BeforeFormClosing;
         #endregion
 
         #region Constructor
         /// <summary>
-        /// Constructor
+        /// コンストラクタ
         /// </summary>
         public CustomForm()
         {
             InitializeComponent();
 
+            // Formのフォントをタイトルフォントに設定
             titleFont = this.Font;
 
+            // FormBorderStyleをNoneに設定
             FormBorderStyle = FormBorderStyle.None;
+            // FormのAutoScaleModeをDipに設定して、高DPI対応にする
             AutoScaleMode = AutoScaleMode.Dpi;
+
             Sizable = true;
             DoubleBuffered = true;
             SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
 
-            // This enables the form to trigger the MouseMove, MouseLDown event even when mouse is over another control
+            // この設定でフォーム上のほかのコントロールの上にカーソルがある時にMouseMove, MouseLDownイベントが発生されるようになる。
             Application.AddMessageFilter(new MouseMessageFilter());
             MouseMessageFilter.MouseMove += OnGlobalMouseMove;
-
-            aeroEnabled = false;
         }
         #endregion
 
         #region Events
-
         private bool cancelFormClose = false;
         protected virtual void OnBeforeFormClosing(BeforeFormClosingEventArgs e)
         {
