@@ -607,7 +607,7 @@ namespace CustomControl
         //}
 
         /// <summary>
-        /// 非クライアント領域でマウスの左ボタンを押した時の処理
+        /// 非クライアント領域(ウインドウのタイトルバーや枠)の描画処理
         /// </summary>
         /// <param name="m">メッセージ</param>
         private void WmNCPaint(ref Message m)
@@ -634,13 +634,21 @@ namespace CustomControl
         #endregion
 
         #region Methods Override
+        /// <summary>
+        /// Load イベント
+        /// </summary>
+        /// <param name="e">EventArgs</param>
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
 
+            // ディスプレイの解像度を考慮したFormの境界線幅を計算
             borderWidthDPI = (int)(BorderWidth * DPI_SCALE);
+            // ディスプレイの解像度を考慮したFormのタイトルバー高さを計算
             titleBarHeightDPI = (int)(TitleBarHeight * DPI_SCALE);
+            // ディスプレイの解像度を考慮したFormのタイトルバーのコントロールボックスの幅を計算
             TitleBarButtonWidth = (int)(titleBarHeightDPI * 1.5f);
+            // コントロールボックスのボタン領域を計算
             CalcButtonBounds();
 
             // タイトルバーを塗りつぶすBrushのインスタンスを生成する。
@@ -649,6 +657,7 @@ namespace CustomControl
             // タイトルバーの文字色を決定する。
             textColor = OptimizedTextColor(TitleBarColor);
 
+            // Formの最小サイズを計算
             if (ControlBox)
             {
                 if (MinimizeBox && MaximizeBox)
@@ -669,7 +678,7 @@ namespace CustomControl
                 this.MinimumSize = new Size(TitleBarButtonWidth, titleBarHeightDPI);
             }
 
-            // Show form with fade-in
+            // Formをフェードインしながら表示する
             Opacity = 0;
             Animate(FADEIN_ANIMATION_TIME, (frame, frequency) =>
             {
@@ -679,20 +688,26 @@ namespace CustomControl
             });
         }
 
+        /// <summary>
+        /// OnMouseDoubleClick イベント
+        /// </summary>
+        /// <param name="e">MouseEventArgs</param>
         protected override void OnMouseDoubleClick(MouseEventArgs e)
         {
             base.OnMouseDoubleClick(e);
 
+            // コントロールボックスを除くタイトルバーをダブルクリックした場合
             if (titleBarBounds.Contains(e.Location)
                 && !leftButtonBounds.Contains(e.Location)
                 && !centerButtonBounds.Contains(e.Location)
                 && !xButtonBounds.Contains(e.Location))
             {
+                // Formが最大化している場合はNormalに変更
                 if (this.WindowState == FormWindowState.Maximized)
                 {
                     this.FormNormal();
                 }
-                else
+                else // Formが最大化ではない場合は最大化に変更
                 {
                     if (Sizable)
                     {
@@ -702,90 +717,122 @@ namespace CustomControl
             }
         }
 
+        /// <summary>
+        /// OnMouseDown イベント
+        /// </summary>
+        /// <param name="e">MouseEventArgs</param>
         protected override void OnMouseDown(MouseEventArgs e)
         {
+            // デザインモードの場合ここでメソッド終了
             if (DesignMode)
                 return;
 
+            base.OnMouseDown(e);
+
+            // Formが最大化している場合
             if (WindowState == FormWindowState.Maximized)
             {
+                // コントロールボックスを除くタイトルバーをマウスダウンした場合
                 if (e.Button == MouseButtons.Left
                     && titleBarBounds.Contains(e.Location)
                     && !leftButtonBounds.Contains(e.Location)
                     && !centerButtonBounds.Contains(e.Location)
                     && !xButtonBounds.Contains(e.Location))
                 {
+                    // フラグを更新
                     isClickingTitleBar = true;
                 }
                 else
                 {
+                    // コントロールボックスのボタンを更新
                     UpdateButtons(e);
                 }
             }
             else
             {
+                // コントロールボックスのボタンを更新
                 UpdateButtons(e);
 
+                // 左クリックによるマウスダウンかつリサイズ方向が設定されている場合
                 if (e.Button == MouseButtons.Left && resizeDir != ResizeDirection.None)
+                {
+                    // リサイズ
                     ResizeForm(resizeDir);
+                }
             }
-
-            base.OnMouseDown(e);
         }
 
+        /// <summary>
+        /// OnMouseUp イベント
+        /// </summary>
+        /// <param name="e">MouseEventArgs</param>
         protected override void OnMouseUp(MouseEventArgs e)
         {
+            // デザインモードの場合ここでメソッド終了
             if (DesignMode)
                 return;
 
+            base.OnMouseUp(e);
+
+            // 左クリックかつタイトルバーをクリックしている場合
             if (e.Button == MouseButtons.Left && isClickingTitleBar)
             {
+                // フラグを更新
                 isClickingTitleBar = false;
             }
             else
             {
+                // コントロールボックスのボタンを更新
                 UpdateButtons(e, true);
 
+                // マウスのキャプチャーを解放する
                 NativeMethods.ReleaseCapture();
             }
-
-            base.OnMouseUp(e);
         }
 
+        /// <summary>
+        /// OnMouseMove イベント
+        /// </summary>
+        /// <param name="e">MouseEventArgs</param>
         protected override void OnMouseMove(MouseEventArgs e)
         {
-            base.OnMouseMove(e);
-
+            // デザインモードの場合ここでメソッド終了
             if (DesignMode)
                 return;
 
+            base.OnMouseMove(e);
+
+            // タイトルバーをクリックしている時
             if (isClickingTitleBar)
             {
                 int x, y;
-                Point pt = Cursor.Position;
+                Point pt = Cursor.Position; // カーソルの座標を取得
+
+                // Formが最大化している場合
                 if (this.WindowState == FormWindowState.Maximized)
                 {
+                    // Formをノーマルに戻す
                     FormNormal();
-
+                    // Formの移動開始座標を算出
                     diffPoint = new Point(this.Width / 2, RESIZE_BORDER_WIDTH / 2);
 
+                    // 新しい座標を算出
                     x = pt.X - diffPoint.Value.X;
                     y = pt.Y - diffPoint.Value.Y;
                 }
-                else
+                else　// Formが最大化していない場合
                 {
+                    // 新しい座標を算出
                     x = pt.X - diffPoint.Value.X;
                     y = pt.Y - diffPoint.Value.Y;
                 }
 
+                // Formの座標を更新
                 this.Location = new Point(x, y);
             }
-            else if (Sizable)
+            else if (Sizable) // Formがサイズ変更可の場合
             {
-                //True if the mouse is hovering over a child control
-                //bool isChildUnderMouse = GetChildAtPoint(e.Location) != null;
-
-                //if (!isChildUnderMouse && this.WindowState != FormWindowState.Maximized)
+                // Formが最大化していない場合、Fromのサイズ変更処理
                 if (this.WindowState != FormWindowState.Maximized)
                 {
                     if (e.Location.X < RESIZE_BORDER_WIDTH && e.Location.Y > Height - RESIZE_BORDER_WIDTH)
@@ -832,7 +879,6 @@ namespace CustomControl
                     {
                         resizeDir = ResizeDirection.None;
 
-                        //Only reset the cursor when needed, this prevents it from flickering when a child control changes the cursor to its own needs
                         if (resizeCursors.Contains(Cursor))
                         {
                             Cursor = Cursors.Default;
@@ -845,14 +891,17 @@ namespace CustomControl
                 }
             }
 
+            // コントロールボックスのボタンを更新
             UpdateButtons(e);
         }
 
         protected override void OnMouseLeave(EventArgs e)
         {
-            base.OnMouseLeave(e);
             if (DesignMode)
                 return;
+
+            base.OnMouseLeave(e);
+
             buttonState = ButtonState.None;
             Invalidate();
         }
@@ -939,15 +988,6 @@ namespace CustomControl
                             centerButtonBounds.Y - offset + (int)(centerButtonBounds.Height * 0.33),
                             (int)(centerButtonBounds.Height * 0.35),
                             (int)(centerButtonBounds.Height * 0.35));
-
-
-
-                        //if (buttonState == ButtonState.MaxOver && showMax)
-                        //    g.FillRectangle(hoverBrush, centerButtonBounds);
-
-                        //if (buttonState == ButtonState.MaxDown && showMax)
-                        //    g.FillRectangle(downBrush, centerButtonBounds);
-
 
                         g.FillRectangle(
                             titleBarBrush,
