@@ -136,7 +136,7 @@ namespace CustomControl
         /// Sizable
         /// </summary>
         [Category("Layout")]
-        public bool Sizable { get; set; }
+        public bool Sizable { get; set; } = true;
 
         /// <summary>
         /// ユーザーエリア
@@ -284,6 +284,27 @@ namespace CustomControl
                 return xButtonBounds;
             }
         }
+
+        /// <summary>
+        /// コントロールの作成時に必要な情報を取得売る
+        /// </summary>
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                var par = base.CreateParams;
+                // WS_SYSMENU: システムメニューの作成に対するトリガー
+                // WS_MINIMIZEBOX: Formを最小化してタスクバーに表示することを許可する
+                par.Style = par.Style | (int)WindowStyle.WS_MINIMIZEBOX | (int)WindowStyle.WS_SYSMENU; // WS_MINIMIZEBOX style flagを有効にする
+
+                // ドロップシャドウの描画の可否を判定
+                aeroEnabled = CheckAeroEnabled();
+                if (!aeroEnabled)
+                    par.ClassStyle |= NativeConstants.CS_DROPSHADOW;
+
+                return par;
+            }
+        }
         #endregion
 
         #region Fields
@@ -367,7 +388,7 @@ namespace CustomControl
         // Formのタイトルのフォント
         private readonly Font titleFont;
 
-        // Fromの枠に影をつけることができるかかどうか.(OSの種類によりCheckAeroEnabledにて自動判定)
+        // Fromの枠に影（ドロップシャドウ）をつけることができるかかどうか.(OSの種類によりCheckAeroEnabledにて自動判定)
         private bool aeroEnabled = false;
 
         // Formがアクティブかどうか
@@ -396,7 +417,7 @@ namespace CustomControl
             // FormのAutoScaleModeをDipに設定して、高DPI対応にする
             AutoScaleMode = AutoScaleMode.Dpi;
 
-            Sizable = true;
+            // ダブルバッファーを有効にする
             DoubleBuffered = true;
             SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
 
@@ -407,22 +428,29 @@ namespace CustomControl
         #endregion
 
         #region Events
-        private bool cancelFormClose = false;
+        /// <summary>
+        /// FormClosingイベントで任意の処理を実行
+        /// </summary>
+        /// <param name="e"></param>
         protected virtual void OnBeforeFormClosing(BeforeFormClosingEventArgs e)
         {
             if (BeforeFormClosing != null)
             {
                 BeforeFormClosing(this, e);
-
-                cancelFormClose = e.Cancel;
             }
         }
         #endregion
 
         #region Methods For Window Messages
+        /// <summary>
+        /// ウインドウプロシージャ
+        /// </summary>
+        /// <param name="m">メッセージ</param>
         protected override void WndProc(ref Message m)
         {
             base.WndProc(ref m);
+
+            // デザインモードの時はここでこのメソッドを終了する
             if (DesignMode || IsDisposed)
                 return;
 
@@ -438,7 +466,7 @@ namespace CustomControl
                 //        Debug.Print("WM_MOUSELAST");
                 //        break;
                 //    }
-                case (int)WindowMessages.WM_RBUTTONDOWN:
+                case (int)WindowMessages.WM_RBUTTONDOWN: // クライアント領域でマウスの右ボタンを押した時に送られるメッセージ
                     {
                         WmRButtonDown(ref m);
                         break;
@@ -463,7 +491,7 @@ namespace CustomControl
                 //        WmMouseMove(ref m);
                 //        break;
                 //    }
-                case (int)WindowMessages.WM_NCPAINT:
+                case (int)WindowMessages.WM_NCPAINT: // 非クライアント領域の描画が必要になった時に送られるメッセージ
                     {
                         WmNCPaint(ref m);
                         break;
@@ -483,70 +511,91 @@ namespace CustomControl
             }
         }
 
+        /// <summary>
+        /// クライアント領域でマウスの右ボタンを押した時の処理
+        /// </summary>
+        /// <param name="m">メッセージ</param>
         private void WmRButtonDown(ref Message m)
         {
+            // カーソルの座標をクライアント領域の座標に変換
             Point cursorPos = PointToClient(Cursor.Position);
 
-            // Default context menu
+            // 右クリックの座標がタイトルバーの内側の時
             if (titleBarBounds.Contains(cursorPos))
             {
-                // Show default system menu when right clicking titlebar
+                // システムのデフォルトのメニューを表示する
                 var id = NativeMethods.TrackPopupMenuEx(NativeMethods.GetSystemMenu(Handle, false), NativeConstants.TPM_LEFTALIGN | NativeConstants.TPM_RETURNCMD, Cursor.Position.X, Cursor.Position.Y, Handle, IntPtr.Zero);
 
-                // Pass the command as a WM_SYSCOMMAND message
+                // WM_SYSCOMMANDメッセージを送信
                 NativeMethods.SendMessage(Handle, (int)WindowMessages.WM_SYSCOMMAND, id, 0);
             }
         }
 
+        /// <summary>
+        /// クライアント領域でマウスの左ボタンを押した時の処理
+        /// </summary>
+        /// <param name="m">メッセージ</param>
         private void WmLButtonDown(ref Message m)
         {
+            // カーソルの座標をクライアント領域の座標に変換
+            Point cursorPos = PointToClient(Cursor.Position);
+
+            // クリックしながら移動する場合のフラグ
             bool isClickingAndMove = false;
-            if (titleBarBounds.Contains(PointToClient(Cursor.Position)))
+
+            // 左クリックの座標がタイトルバーの内側の時
+            if (titleBarBounds.Contains(cursorPos))
             {
-                if (MinimizeBox && MaximizeBox && !(leftButtonBounds.Contains(PointToClient(Cursor.Position))
-                || centerButtonBounds.Contains(PointToClient(Cursor.Position))
-                || xButtonBounds.Contains(PointToClient(Cursor.Position))))
+                // 各ボタンが表示/非表示の設定に応じて、クリックしながら移動するかどうかを判定
+                if (MinimizeBox && MaximizeBox && !(leftButtonBounds.Contains(cursorPos)
+                || centerButtonBounds.Contains(cursorPos)
+                || xButtonBounds.Contains(cursorPos)))
                 {
                     isClickingAndMove = true;
                 }
                 else if (((!MinimizeBox && MaximizeBox) || (MinimizeBox && !MaximizeBox))
-                && !centerButtonBounds.Contains(PointToClient(Cursor.Position))
-                && !xButtonBounds.Contains(PointToClient(Cursor.Position)))
+                && !centerButtonBounds.Contains(cursorPos)
+                && !xButtonBounds.Contains(cursorPos))
                 {
                     isClickingAndMove = true;
                 }
-                else if ((!MinimizeBox && !MaximizeBox) && !xButtonBounds.Contains(PointToClient(Cursor.Position)))
+                else if ((!MinimizeBox && !MaximizeBox) && !xButtonBounds.Contains(cursorPos))
                 {
                     isClickingAndMove = true;
                 }
             }
 
+            // クリックしながら移動の場合
             if (isClickingAndMove)
             {
-                if (this.WindowState != FormWindowState.Maximized)
+                if (this.WindowState != FormWindowState.Maximized) // Formが最大化ではない場合
                 {
-                    // Click and Move window
+                    // クリックしながらFormを移動する
                     NativeMethods.ReleaseCapture();
                     NativeMethods.SendMessage(Handle, NativeConstants.WM_NCLBUTTONDOWN, (int)HitTestValues.HT_CAPTION, 0);
                 }
             }
         }
 
+        /// <summary>
+        /// 非クライアント領域でマウスの左ボタンを押した時の処理
+        /// </summary>
+        /// <param name="m">メッセージ</param>
         private void WmNCLButtonDown(ref Message m)
         {
-            // This re-enables resizing by letting the application know when the
-            // user is trying to resize a side. This is disabled by default when using WS_SYSMENU.
+            // Formがサイズ変更不可の場合、ここでこのメソッドを終了する
             if (!Sizable)
                 return;
 
-            byte bFlag = 0;
+            byte byteFlag = 0;
 
-            // Get which side to resize from
+            // クリックしているFormの淵を取得
             if (ResizingLocationsToCmd.ContainsKey((int)m.WParam))
-                bFlag = (byte)ResizingLocationsToCmd[(int)m.WParam];
+                byteFlag = (byte)ResizingLocationsToCmd[(int)m.WParam];
 
-            if (bFlag != 0)
-                NativeMethods.SendMessage(Handle, (int)WindowMessages.WM_SYSCOMMAND, 0xF000 | bFlag, (int)m.LParam);
+            // クリックしているFormの淵が検出された場合、リサイズを実行する
+            if (byteFlag != 0)
+                NativeMethods.SendMessage(Handle, (int)WindowMessages.WM_SYSCOMMAND, 0xF000 | byteFlag, (int)m.LParam);
         }
 
         //private void WmLButtonUp(ref Message m)
@@ -557,9 +606,13 @@ namespace CustomControl
         //{
         //}
 
+        /// <summary>
+        /// 非クライアント領域でマウスの左ボタンを押した時の処理
+        /// </summary>
+        /// <param name="m">メッセージ</param>
         private void WmNCPaint(ref Message m)
         {
-            // For draw dropshadow
+            // ドロップシャドウを描画する
             if (aeroEnabled)
             {
                 var v = 2;
@@ -581,24 +634,6 @@ namespace CustomControl
         #endregion
 
         #region Methods Override
-        protected override CreateParams CreateParams
-        {
-            get
-            {
-                var par = base.CreateParams;
-                // WS_SYSMENU: Trigger the creation of the system menu
-                // WS_MINIMIZEBOX: Allow minimizing from taskbar
-                par.Style = par.Style | (int)WindowStyle.WS_MINIMIZEBOX | (int)WindowStyle.WS_SYSMENU; // Turn on the WS_MINIMIZEBOX style flag
-
-                // For draw dropshadow
-                aeroEnabled = CheckAeroEnabled();
-                if (!aeroEnabled)
-                    par.ClassStyle |= NativeConstants.CS_DROPSHADOW;
-
-                return par;
-            }
-        }
-
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
