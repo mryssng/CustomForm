@@ -689,7 +689,7 @@ namespace CustomControl
         }
 
         /// <summary>
-        /// OnMouseDoubleClick イベント
+        /// MouseDoubleClick イベント
         /// </summary>
         /// <param name="e">MouseEventArgs</param>
         protected override void OnMouseDoubleClick(MouseEventArgs e)
@@ -718,7 +718,7 @@ namespace CustomControl
         }
 
         /// <summary>
-        /// OnMouseDown イベント
+        /// MouseDown イベント
         /// </summary>
         /// <param name="e">MouseEventArgs</param>
         protected override void OnMouseDown(MouseEventArgs e)
@@ -763,7 +763,7 @@ namespace CustomControl
         }
 
         /// <summary>
-        /// OnMouseUp イベント
+        /// MouseUp イベント
         /// </summary>
         /// <param name="e">MouseEventArgs</param>
         protected override void OnMouseUp(MouseEventArgs e)
@@ -791,7 +791,7 @@ namespace CustomControl
         }
 
         /// <summary>
-        /// OnMouseMove イベント
+        /// MouseMove イベント
         /// </summary>
         /// <param name="e">MouseEventArgs</param>
         protected override void OnMouseMove(MouseEventArgs e)
@@ -895,37 +895,55 @@ namespace CustomControl
             UpdateButtons(e);
         }
 
+        /// <summary>
+        /// MouseLeave
+        /// </summary>
+        /// <param name="e">EventArgs</param>
         protected override void OnMouseLeave(EventArgs e)
         {
+            // デザインモードの場合ここでメソッド終了
             if (DesignMode)
                 return;
 
             base.OnMouseLeave(e);
 
+            // buttonStateをNoneに設定
             buttonState = ButtonState.None;
+
+            // 描画更新
             Invalidate();
         }
 
+        /// <summary>
+        /// Resizeイベント
+        /// </summary>
+        /// <param name="e">EventArgs</param>
         protected override void OnResize(EventArgs e)
         {
             base.OnResize(e);
 
+            // コントロールボックスのボタンの境界を計算
             CalcButtonBounds();
         }
 
+        /// <summary>
+        /// Paintイベント
+        /// </summary>
+        /// <param name="e">PaintEventArgs</param>
         protected override void OnPaint(PaintEventArgs e)
         {
+            // Graphicsを取得
             var g = e.Graphics;
 
-            g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
+            //g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
 
-            // Draw background
+            // Formの背景をBackDropColorで塗りつぶす
             g.Clear(BackDropColor);
 
-            // Draw title bar
+            // タイトルバーを描画
             g.FillRectangle(titleBarBrush, titleBarBounds);
 
-            // Draw border
+            // Formの境界線を描画
             using (var borderPen = new Pen(BorderColor, borderWidthDPI))
             {
                 g.DrawLine(borderPen, new PointF(0, 0), new PointF(0, this.ClientRectangle.Height));
@@ -934,35 +952,36 @@ namespace CustomControl
                 g.DrawLine(borderPen, new PointF(this.ClientRectangle.Width - 1, 0), new PointF(1, 0));
             }
 
-            // Determine whether or not we even should be drawing the buttons.
+            // コントロールボックスのどのボタンを描画するかを設定
             bool showMin = MinimizeBox && ControlBox;
             bool showMax = MaximizeBox && ControlBox;
+            // コントロールボックスのボタンのマウスホバー時、マウスボタンダウン時の描画Brushを設定
             var hoverBrush = BACKGROUND_HOVER_BRUSH;
             var downBrush = BACKGROUND_FOCUS_BRUSH;
 
-            // When MaximizeButton == false, the minimize button will be painted in its place
+            // 最小化ボタンの表示位置の決定とボタン背景の描画を行う
             if (buttonState == ButtonState.MinOver && showMin)
                 g.FillRectangle(hoverBrush, showMax ? leftButtonBounds : centerButtonBounds);
-
             if (buttonState == ButtonState.MinDown && showMin)
                 g.FillRectangle(downBrush, showMax ? leftButtonBounds : centerButtonBounds);
 
+            // 最大化ボタンの表示位置の決定とボタン背景の描画を行う
             if (buttonState == ButtonState.MaxOver && showMax)
                 g.FillRectangle(hoverBrush, centerButtonBounds);
-
             if (buttonState == ButtonState.MaxDown && showMax)
                 g.FillRectangle(downBrush, centerButtonBounds);
 
+            // クローズボタンのボタン背景の描画を行う
             if (buttonState == ButtonState.XOver && ControlBox)
                 g.FillRectangle(hoverBrush, xButtonBounds);
-
             if (buttonState == ButtonState.XDown && ControlBox)
                 g.FillRectangle(downBrush, xButtonBounds);
 
+            // コントロールボックスのボタン内部の描画
             float offset_x = (leftButtonBounds.Width - leftButtonBounds.Height) / 2f;
             using (var formButtonsPen = new Pen(this.isFormActivated ? this.textColor : TEXT_DISABLED_COLOR, 1f * DPI_SCALE))
             {
-                // Minimize button.
+                // 最小化ボタン
                 if (showMin)
                 {
                     int x = showMax ? leftButtonBounds.X : centerButtonBounds.X;
@@ -976,7 +995,7 @@ namespace CustomControl
                         y + (leftButtonBounds.Height * 0.50f));
                 }
 
-                // Maximize button
+                // 最大化ボタン
                 if (showMax)
                 {
                     if (this.WindowState == FormWindowState.Maximized)
@@ -1033,7 +1052,7 @@ namespace CustomControl
                     }
                 }
 
-                // Close button
+                // クローズボタン
                 if (ControlBox)
                 {
                     g.DrawLine(
@@ -1052,81 +1071,125 @@ namespace CustomControl
                 }
             }
 
-            //Form text
+            // Formタイトルのテキスト描画
+            // テキスト レンダリングにアンチエイリアスを設定する
             g.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
-            using (StringFormat sf = new StringFormat(StringFormat.GenericTypographic))
+            using (StringFormat sf = new StringFormat(StringFormat.GenericTypographic)) // Formタイトルのテキストの前後の隙間を最小にする
             using (Brush textBrush = new SolidBrush(this.isFormActivated ? this.textColor : TEXT_DISABLED_COLOR))
             {
-                sf.Trimming = StringTrimming.EllipsisWord;
-                sf.Alignment = StringAlignment.Near;
-                sf.LineAlignment = StringAlignment.Center;
+                sf.Trimming = StringTrimming.EllipsisWord; // テキストが最も近い語にトリムされ、トリムされた行の末尾に省略記号が挿入されるように設定
+                sf.Alignment = StringAlignment.Near; // テキストの水平方向位置を左寄せに設定
+                sf.LineAlignment = StringAlignment.Center; // テキストの垂直方向位置を中心に設定
+                // テキスト描画座標を算出
                 RectangleF textLocation = new RectangleF(FORM_PADDING * DPI_SCALE,
                                                          titleBarBounds.Y,
                                                          titleBarBounds.Width - FORM_PADDING * DPI_SCALE - TitleBarButtonWidth * 3,
                                                          titleBarBounds.Height);
+                // テキストを描画
                 g.DrawString(Text, this.titleFont, textBrush, textLocation, sf);
             }
         }
 
+        /// <summary>
+        /// Activatedイベント
+        /// </summary>
+        /// <param name="e">EventArgs</param>
         protected override void OnActivated(EventArgs e)
         {
             base.OnActivated(e);
 
+            // Formアクティベイト フラグをtrueに設定
             isFormActivated = true;
+            // 再描画
             Invalidate();
         }
 
+        /// <summary>
+        /// Deactivateイベント
+        /// </summary>
+        /// <param name="e">EventArgs</param>
         protected override void OnDeactivate(EventArgs e)
         {
             base.OnDeactivate(e);
 
+            // Formアクティベイト フラグをfalseに設定
             isFormActivated = false;
+            // 再描画
             Invalidate();
         }
-        #endregion
 
-        #region Methods
+        /// <summary>
+        /// GlobalMouseMoveイベント
+        /// </summary>
+        /// <param name="sender">object</param>
+        /// <param name="e">MouseEventArgs</param>
         protected void OnGlobalMouseMove(object sender, MouseEventArgs e)
         {
+            // デザインモードの場合ここでメソッド終了
             if (IsDisposed)
                 return;
-            // Convert to client position and pass to Form.MouseMove
+
+            // カーソルの座標をクライアント座標に変換してForm.MouseMoveを処理
             var clientCursorPos = PointToClient(e.Location);
             MouseEventArgs newEvent = new MouseEventArgs(MouseButtons.None, 0, clientCursorPos.X, clientCursorPos.Y, 0);
             OnMouseMove(newEvent);
         }
 
+        /// <summary>
+        /// GlobalMouseLDownイベント
+        /// </summary>
+        /// <param name="sender"><object/param>
+        /// <param name="e">MouseEventArgs</param>
         protected void OnGlobalMouseLDown(object sender, MouseEventArgs e)
         {
+            // デザインモードの場合ここでメソッド終了
             if (IsDisposed)
                 return;
 
-            // Convert to client position and pass to Form.MouseMove
+            // カーソルの座標をクライアント座標に変換してForm.OnMouseDownを処理
             var clientCursorPos = PointToClient(e.Location);
             MouseEventArgs newEvent = new MouseEventArgs(MouseButtons.Left, 0, clientCursorPos.X, clientCursorPos.Y, 0);
             OnMouseDown(newEvent);
         }
 
+        /// <summary>
+        /// GlobalMouseLUpイベント
+        /// </summary>
+        /// <param name="sender">object</param>
+        /// <param name="e">MouseEventArgs</param>
         protected void OnGlobalMouseLUp(object sender, MouseEventArgs e)
         {
+            // デザインモードの場合ここでメソッド終了
             if (IsDisposed)
                 return;
 
-            // Convert to client position and pass to Form.MouseMove
+            // カーソルの座標をクライアント座標に変換してForm.OnMouseUpを処理
             var clientCursorPos = PointToClient(e.Location);
             MouseEventArgs newEvent = new MouseEventArgs(MouseButtons.Left, 0, clientCursorPos.X, clientCursorPos.Y, 0);
             OnMouseUp(newEvent);
         }
+        #endregion
 
+        #region Methods
+        /// <summary>
+        /// コントロールボックスのボタンの状態を更新
+        /// </summary>
+        /// <param name="e">MouseEventArgs</param>
+        /// <param name="up">MouseUp処理直後の場合はtrueに設定する.デフォルトの値はfalse</param>
         private void UpdateButtons(MouseEventArgs e, bool up = false)
         {
+            // デザインモードの場合ここでメソッド終了
             if (DesignMode)
                 return;
 
+            // 更新前のButtonStateを保存
             var oldState = buttonState;
+            // 最小化ボタンの表示の可否を取得
             bool showMin = MinimizeBox && ControlBox;
+            // 最大化ボタンの表示の可否を取得
             bool showMax = MaximizeBox && ControlBox;
 
+            // 左ボタンクリックのマウスアップではない場合
             if (e.Button == MouseButtons.Left && !up)
             {
                 if (showMin && !showMax && centerButtonBounds.Contains(e.Location))
@@ -1140,7 +1203,7 @@ namespace CustomControl
                 else
                     buttonState = ButtonState.None;
             }
-            else
+            else // 右ボタンクリックまたはマウスアップの場合
             {
                 if (showMin && !showMax && centerButtonBounds.Contains(e.Location))
                 {
@@ -1194,14 +1257,22 @@ namespace CustomControl
                     buttonState = ButtonState.None;
             }
 
+            // 更新の前後でButtonStateの値が異なるとき、再描画する
             if (oldState != buttonState)
                 Refresh();
         }
 
+        /// <summary>
+        /// Formのリサイズを行う
+        /// </summary>
+        /// <param name="direction"></param>
         private void ResizeForm(ResizeDirection direction)
         {
+            // デザインモードの場合ここでメソッド終了
             if (DesignMode)
                 return;
+
+            // Formのリサイズの方向を検出
             var dir = -1;
             switch (direction)
             {
@@ -1238,6 +1309,7 @@ namespace CustomControl
                     break;
             }
 
+            // リサイズの方向を検出できた場合は非クライアント領域の左ボタンダウンメッセージを送信
             NativeMethods.ReleaseCapture();
             if (dir != -1)
             {
@@ -1245,6 +1317,7 @@ namespace CustomControl
             }
         }
 
+        
         private void FormClosingWithAnimetion()
         {
             Opacity = 1;

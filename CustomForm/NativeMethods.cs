@@ -560,5 +560,5 @@ namespace NativeAPI
         // 論理インチ当たりの画面の垂直方向のピクセル数
         public const int LOGPIXELSY = 90;
 
-    }
+    }       
 }
