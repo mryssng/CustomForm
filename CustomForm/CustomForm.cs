@@ -1317,7 +1317,9 @@ namespace CustomControl
             }
         }
 
-        
+        /// <summary>
+        /// Formをクローズする際のフェードアウト アニメーションを実行
+        /// </summary>
         private void FormClosingWithAnimetion()
         {
             Opacity = 1;
@@ -1331,26 +1333,42 @@ namespace CustomControl
             });
         }
 
+        /// <summary>
+        /// Formを最小化する
+        /// </summary>
         private void FormMinimize()
         {
+            // 最小化前のFormの位置とサイズを保存
             this.oldWindowRect = this.ClientRectangle;
-
+            // 最小化するためFormBorderStyleをSizableにしなければならないため、最小化前のFormBorderStyleを保存しておく
             FormBorderStyle lastStyle = this.FormBorderStyle;
             this.FormBorderStyle = FormBorderStyle.Sizable;
+            // Formを最小化する
             WindowState = FormWindowState.Minimized;
+            // FormBorderStyleをもとに戻す
             this.FormBorderStyle = lastStyle;
         }
 
+        /// <summary>
+        /// Formを最大化する
+        /// </summary>
         private void FormMaximize()
         {
+            // 最大化前のFormの位置とサイズを保存
             this.oldWindowRect = this.ClientRectangle;
-
+            // Formが表示されているディスプレイを取得（マルチディスプレイ対応）
             Screen currentScreen = Screen.FromControl(this);
+            // WorkingAreaを取得（タスクバーを除くサイズ）
             Rectangle workArea = currentScreen.WorkingArea;
+            // Formを最大化する
             this.MaximumSize = workArea.Size;
+            // WindowStateをMaximizedに変更
             this.WindowState = FormWindowState.Maximized;
         }
 
+        /// <summary>
+        /// Formをノーマルする
+        /// </summary>
         private void FormNormal()
         {
             this.Location = new Point(this.oldWindowRect.X, this.oldWindowRect.Y);
