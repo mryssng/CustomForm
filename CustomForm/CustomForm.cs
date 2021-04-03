@@ -1,12 +1,11 @@
-﻿using System;
+﻿using NativeAPI;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Text;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using NativeAPI;
 
 /* 
  * If Windows.Form is used the below lines have to be added in .csproj file
@@ -74,7 +73,7 @@ namespace CustomControl
 
         #region BeforeFormClosingEventArgsClass
         /// <summary>
-        /// BeforeFormClosingEventArgs
+        /// Formのクローズをキャンセルするためのクラス
         /// </summary>
         public class BeforeFormClosingEventArgs : EventArgs
         {
@@ -1367,35 +1366,47 @@ namespace CustomControl
         }
 
         /// <summary>
-        /// Formをノーマルする
+        /// Formを最大化または最小化から通常の状態にする
         /// </summary>
         private void FormNormal()
         {
+            // 保存したFormの位置とサイズに設定
             this.Location = new Point(this.oldWindowRect.X, this.oldWindowRect.Y);
             this.Size = new Size(this.oldWindowRect.Width, this.oldWindowRect.Height);
+            // WindowStateをNormalに変更
             this.WindowState = FormWindowState.Normal;
         }
 
+        /// <summary>
+        /// Windows Aeroが使えるかどうか確認
+        /// </summary>
+        /// <returns></returns>
         private bool CheckAeroEnabled()
         {
-            if (Environment.OSVersion.Version.Major >= 6)
+            if (Environment.OSVersion.Version.Major >= 6) // Vista以上であることを確認
             {
                 int enabled = 0;
+                // Windows Aeroが使えるかどうか確認
                 NativeMethods.DwmIsCompositionEnabled(ref enabled);
                 return (enabled == 1) ? true : false;
             }
             return false;
         }
 
+        /// <summary>
+        /// コントロールボックスのボタンおよびタイトルバーの境界を計算
+        /// </summary>
         private void CalcButtonBounds()
         {
-            // Calc bounds
             leftButtonBounds = new Rectangle(Width - 3 * TitleBarButtonWidth, 0, TitleBarButtonWidth, titleBarHeightDPI);
             centerButtonBounds = new Rectangle(Width - 2 * TitleBarButtonWidth, 0, TitleBarButtonWidth, titleBarHeightDPI);
             xButtonBounds = new Rectangle(Width - TitleBarButtonWidth, 0, TitleBarButtonWidth, titleBarHeightDPI);
             titleBarBounds = new Rectangle(0, 0, Width, titleBarHeightDPI);
         }
 
+        /// <summary>
+        /// 初期化
+        /// </summary>
         private void InitializeComponent()
         {
             this.SuspendLayout();
@@ -1513,6 +1524,11 @@ namespace CustomControl
         #endregion
     }
 
+
+    /// <summary>
+    /// メッセージフィルタを登録してフォーム上のほかのコントロールの上にカーソルがある時に
+    /// MouseMove, MouseLDownイベントが発生されるようにする
+    /// </summary>
     public class MouseMessageFilter : IMessageFilter
     {
         public static event MouseEventHandler MouseMove;
