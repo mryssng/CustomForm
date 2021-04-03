@@ -132,6 +132,28 @@ namespace CustomControl
         }
 
         /// <summary>
+        /// Iconをプロパティウィンドウで非表示に設定する
+        /// </summary>
+        [Browsable(false)]                              // プロパティウィンドウ非表示
+        [EditorBrowsable(EditorBrowsableState.Never)]   // インテリセンス非表示
+        public new Icon Icon
+        {
+            get { return base.Icon; }
+            protected set { base.Icon = value; }
+        }
+
+        /// <summary>
+        /// ShowIconをプロパティウィンドウで非表示に設定する
+        /// </summary>
+        [Browsable(false)]                              // プロパティウィンドウ非表示
+        [EditorBrowsable(EditorBrowsableState.Never)]   // インテリセンス非表示
+        public new bool ShowIcon
+        {
+            get { return base.ShowIcon; }
+            protected set { base.ShowIcon = value; }
+        }
+
+        /// <summary>
         /// Sizable
         /// </summary>
         [Category("Layout")]
