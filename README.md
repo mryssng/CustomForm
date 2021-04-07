@@ -3,7 +3,7 @@
 ## About
 CustomForm is example of full customized window using Windows Forms.
 
-CustomForm is inspired by IgnaceMaes's [MaterialSkin](https://github.com/IgnaceMaes/MaterialSkin)
+CustomForm is inspired by IgnaceMaes's [MaterialSkin](https://github.com/IgnaceMaes/MaterialSkin).
 
 
 ## Requirements
@@ -24,6 +24,6 @@ These properties can be changed.
 ![Screenshot#3](Images/Image3.png)
 
 ## Unsupported
-Show Icon on Title Bar
+Show Icon on Title Bar.
 
 
