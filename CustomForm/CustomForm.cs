@@ -1,4 +1,9 @@
-﻿using NativeAPI;
+﻿// -------------------------------------------------------------------------------------------------
+// Copyright (c) mryssng. All rights reserved.
+// Licensed under the MIT License (MIT). See LICENSE in the repo root for license information.
+// -------------------------------------------------------------------------------------------------
+
+using NativeAPI;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -7,12 +12,12 @@ using System.Drawing.Text;
 using System.Linq;
 using System.Windows.Forms;
 
-/* 
- * If Windows.Form is used the below lines have to be added in .csproj file
- *  < ItemGroup >
- *      < FrameworkReference Include = "Microsoft.WindowsDesktop.App" />
- *  </ ItemGroup >
- */
+// -------------------------------------------------------------------------------------------------
+// If Windows.Form is used the below lines have to be added in .csproj file
+//  < ItemGroup >
+//      < FrameworkReference Include = "Microsoft.WindowsDesktop.App" />
+//  </ ItemGroup >
+// -------------------------------------------------------------------------------------------------
 
 namespace CustomControl
 {
