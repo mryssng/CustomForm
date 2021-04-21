@@ -7,12 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="AnimationDirection.cs" />
-    <Compile Remove="AnimationManager.cs" />
-    <Compile Remove="Animations.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <FrameworkReference Include="Microsoft.WindowsDesktop.App" />
   </ItemGroup>
 </Project>
