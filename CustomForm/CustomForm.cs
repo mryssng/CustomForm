@@ -264,6 +264,30 @@ namespace CustomControl
         } = Color.Snow;
 
         /// <summary>
+        /// Formが開く時のフェードイン アニメーションの時間長さ
+        /// </summary>
+        [Description("Formが開く時のフェードイン アニメーションの時間長さを設定します。(msec)")]
+        [Category("CustomForm")]
+        [DefaultValue(typeof(int), "2")]
+        [Browsable(true)]
+        public int FadeinAnimetionTime
+        {
+            get; set;
+        } = FADEIN_ANIMATION_TIME;
+
+        /// <summary>
+        /// Formが閉じる時のフェードアウト アニメーションの時間長さ
+        /// </summary>
+        [Description("Formが閉じる時のフェードアウト アニメーションの時間長さを設定します。(msec)")]
+        [Category("CustomForm")]
+        [DefaultValue(typeof(int), "2")]
+        [Browsable(true)]
+        public int FadeoutAnimetionTime
+        {
+            get; set;
+        } = FADEOUT_ANIMATION_TIME;
+
+        /// <summary>
         /// Formがアクティブかどうか
         /// </summary>
         [Browsable(false)]
@@ -706,7 +730,7 @@ namespace CustomControl
 
             // Formをフェードインしながら表示する
             Opacity = 0;
-            Animate(FADEIN_ANIMATION_TIME, (frame, frequency) =>
+            Animate(FadeinAnimetionTime, (frame, frequency) =>
             {
                 if (!Visible || IsDisposed) return false;
                 Opacity = (double)frame / frequency;
@@ -1349,7 +1373,7 @@ namespace CustomControl
         private void FormClosingWithAnimetion()
         {
             Opacity = 1;
-            Animate(FADEOUT_ANIMATION_TIME, (frame, frequency) =>
+            Animate(FadeoutAnimetionTime, (frame, frequency) =>
             {
                 Opacity = (1d - (double)frame / frequency);
 
