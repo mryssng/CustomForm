@@ -1543,7 +1543,7 @@ namespace CustomControl
         /// </param>
         public void Animate(int interval, int frequency, Func<int, int, bool> callback)
         {
-            var timer = new System.Windows.Forms.Timer();
+            var timer = new Timer();
             timer.Interval = interval;
             int frame = 0;
             timer.Tick += (sender, e) =>
